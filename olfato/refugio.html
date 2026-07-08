@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olfato — Panel del Refugio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDD8; --ink:#2C1810; --red:#C8432A; --green:#4E8A57;
+    --mustard:#E8A93C; --card:#FFFDF8; --tan:#F0E2C8; --ink-light:#6B5040;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; padding:20px; display:flex; justify-content:center; position:relative; overflow-x:hidden;}
+  .panel{width:100%; max-width:640px; position:relative; z-index:1;}
+  .bg-art{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
+  .paw{position:absolute; opacity:0.04; font-size:60px; animation:flotar 7s ease-in-out infinite;}
+  .paw:nth-child(1){top:5%; left:2%; animation-delay:0s;}
+  .paw:nth-child(2){top:30%; right:1%; font-size:40px; animation-delay:1.5s;}
+  .paw:nth-child(3){bottom:20%; left:1%; font-size:50px; animation-delay:3s;}
+  .paw:nth-child(4){bottom:5%; right:2%; font-size:35px; animation-delay:0.8s;}
+  @keyframes flotar{0%,100%{transform:translateY(0) rotate(-8deg);}50%{transform:translateY(-12px) rotate(4deg);}}
+
+  .header{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .logo-paw{width:42px; height:42px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-size:20px; border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); animation:pulso 3s ease-in-out infinite;}
+  @keyframes pulso{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(-2deg) scale(1.05);}}
+  .logo-text{font-family:'Fraunces',serif; font-size:24px; font-weight:900; letter-spacing:-0.5px;}
+  .salir{margin-left:auto; font-size:12px; font-weight:600; padding:6px 14px; border-radius:99px; background:var(--card); border:1.5px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif; transition:transform .15s, box-shadow .15s;}
+  .salir:hover{transform:translateY(-1px); box-shadow:2px 2px 0 var(--ink);}
+  .sub{font-size:13px; color:var(--ink-light); margin-bottom:16px; margin-top:2px;}
+
+  .tabs{display:flex; gap:8px; margin-bottom:16px;}
+  .tab{flex:1; padding:10px; border-radius:99px; font-size:14px; font-weight:700; border:2px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer; transition:all .2s; font-family:'Inter',sans-serif;}
+  .tab.active{background:var(--ink); color:var(--bg);}
+  .tab:hover:not(.active){background:var(--tan);}
+
+  .tarjeta{background:var(--card); border:2.5px solid var(--ink); border-radius:20px; padding:16px; margin-bottom:14px; box-shadow:4px 4px 0 var(--ink); animation:aparece .3s cubic-bezier(0.34,1.4,0.64,1) both;}
+  @keyframes aparece{from{transform:translateY(10px); opacity:0;}to{transform:none; opacity:1;}}
+  .tarjeta h3{font-family:'Fraunces',serif; font-size:17px; font-weight:900; margin-bottom:8px;}
+  .linea{font-size:13px; margin:4px 0;}
+  .alerta{color:var(--red); font-weight:600;}
+  .fortaleza{color:var(--green); font-weight:600;}
+  .chip{display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; margin-left:6px;}
+  .chip.apto{background:#DCEBD9; color:var(--green); border:1px solid var(--green);}
+  .chip.revisar{background:#F5D1C8; color:var(--red); border:1px solid var(--red);}
+  .chip.estado{background:var(--tan); color:var(--ink-light); border:1px solid rgba(44,24,16,.2);}
+
+  .botones{display:flex; gap:8px; margin-top:12px;}
+  .btn{flex:1; padding:10px; border-radius:12px; font-weight:700; font-size:13px; cursor:pointer; border:2px solid var(--ink); font-family:'Inter',sans-serif; transition:transform .15s, box-shadow .15s;}
+  .btn:hover{transform:translateY(-1px); box-shadow:3px 3px 0 var(--ink);}
+  .btn:active{transform:translateY(1px); box-shadow:none;}
+  .btn-aprobar{background:var(--green); color:#FFFDF8; border-color:var(--green);}
+  .btn-rechazar{background:var(--card); color:var(--red); border-color:var(--red);}
+  .btn-chat{background:var(--mustard); color:var(--ink); border-color:var(--ink);}
+  .motivo-caja{display:none; margin-top:10px; gap:8px;}
+  .motivo-caja.visible{display:flex;}
+  .motivo-caja input{flex:1; padding:9px; border-radius:10px; border:2px solid rgba(44,24,16,.2); background:var(--bg)!important; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink)!important;}
+  .motivo-caja button{padding:9px 14px; border-radius:10px; font-weight:700; background:var(--red); color:#FFFDF8; border:none; cursor:pointer;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{text-align:left; padding:9px 8px; border-bottom:1.5px solid rgba(44,24,16,.12);}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-light); font-weight:700;}
+
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .campo{display:flex; flex-direction:column; gap:4px;}
+  .campo.ancho{grid-column:1 / -1;}
+  .campo label{font-size:11px; font-weight:700; color:var(--ink-light); text-transform:uppercase; letter-spacing:.4px;}
+  .campo input, .campo select{padding:10px; border-radius:11px; border:2px solid rgba(44,24,16,.2); background:var(--bg)!important; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink)!important; -webkit-text-fill-color:var(--ink)!important; transition:border-color .2s;}
+  .campo input:focus, .campo select:focus{outline:none; border-color:var(--green);}
+  .campo input::placeholder{color:var(--ink-light); opacity:1;}
+  .si-no{display:flex; gap:6px;}
+  .si-no button{flex:1; padding:9px; border-radius:11px; font-weight:600; font-size:12px; border:2px solid rgba(44,24,16,.2); background:var(--bg); color:var(--ink); cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif;}
+  .si-no button.activo{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+  .btn-grande{width:100%; padding:13px; border-radius:14px; font-weight:700; font-size:14px; background:var(--green); color:#FFFDF8; border:2.5px solid var(--ink); cursor:pointer; margin-top:12px; font-family:'Inter',sans-serif; box-shadow:4px 4px 0 var(--ink); transition:transform .15s, box-shadow .15s;}
+  .btn-grande:hover{transform:translateY(-2px); box-shadow:6px 6px 0 var(--ink);}
+  .btn-grande:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:4px 4px 0 var(--ink);}
+
+  /* Chat */
+  .chat-panel{background:var(--card); border:2.5px solid var(--ink); border-radius:20px; box-shadow:4px 4px 0 var(--ink); display:flex; flex-direction:column; height:500px;}
+  .chat-header{padding:14px 16px; border-bottom:2px solid rgba(44,24,16,.12); display:flex; align-items:center; gap:8px;}
+  .chat-header h3{font-family:'Fraunces',serif; font-size:16px; font-weight:900; flex:1;}
+  .chat-cerrar{padding:5px 12px; border-radius:99px; font-size:12px; font-weight:600; background:var(--tan); border:1.5px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif;}
+  .mensajes{flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px;}
+  .burbuja{max-width:80%; padding:10px 13px; border-radius:16px; font-size:14px; line-height:1.4; animation:aparecer .25s cubic-bezier(0.34,1.4,0.64,1) both;}
+  @keyframes aparecer{from{transform:scale(.92) translateY(6px); opacity:0;}to{transform:none; opacity:1;}}
+  .burbuja.mia{background:var(--green); color:#FFFDF8; align-self:flex-end; border-bottom-right-radius:4px;}
+  .burbuja.suya{background:var(--tan); color:var(--ink); align-self:flex-start; border-bottom-left-radius:4px; border:1.5px solid rgba(44,24,16,.15);}
+  .burbuja.auto{background:var(--mustard); color:var(--ink); align-self:flex-start; border-bottom-left-radius:4px;}
+  .burbuja-autor{font-size:11px; font-weight:700; opacity:.7; margin-bottom:3px;}
+  .chat-input{display:flex; gap:8px; padding:12px 14px; border-top:2px solid rgba(44,24,16,.12);}
+  .chat-input input{flex:1; padding:10px 13px; border-radius:12px; border:2px solid rgba(44,24,16,.2); background:var(--bg)!important; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink)!important; -webkit-text-fill-color:var(--ink)!important;}
+  .chat-input input:focus{outline:none; border-color:var(--green);}
+  .chat-input input::placeholder{color:var(--ink-light); opacity:1;}
+  .btn-enviar{padding:10px 16px; border-radius:12px; font-weight:700; background:var(--green); color:#FFFDF8; border:2px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif; transition:transform .15s;}
+  .btn-enviar:hover{transform:translateY(-1px);}
+
+  .vacio{text-align:center; padding:40px 20px; color:var(--ink-light); font-size:14px; line-height:1.6;}
+  .aviso{padding:10px 14px; border-radius:12px; background:var(--tan); font-size:13px; font-weight:600; text-align:center; margin-bottom:12px; border:1.5px solid rgba(44,24,16,.2);}
+  .nota{font-size:12px; color:var(--ink-light); margin-top:6px; line-height:1.5;}
+  .oculto{display:none !important;}
+</style>
+</head>
+<body>
+<div class="bg-art">
+  <span class="paw">🐾</span><span class="paw">🐾</span>
+  <span class="paw">🐾</span><span class="paw">🐾</span>
+</div>
+
+<div class="panel">
+  <div class="header">
+    <span class="logo-paw">🏠</span>
+    <span class="logo-text">Olfato</span>
+    <button class="salir" onclick="salir()">Salir</button>
+  </div>
+  <p class="sub" id="subtitulo">Panel del refugio · gestión de adopciones</p>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-solicitudes" onclick="cambiarTab('solicitudes')">Solicitudes</button>
+    <button class="tab" id="tab-perros" onclick="cambiarTab('perros')">Mis animales</button>
+    <button class="tab" id="tab-cargar" onclick="cambiarTab('cargar')">+ Cargar animal</button>
+  </div>
+
+  <div id="aviso" class="aviso oculto"></div>
+  <div id="vista-solicitudes"></div>
+  <div id="vista-perros" class="oculto"></div>
+  <div id="vista-cargar" class="oculto">
+    <div class="tarjeta">
+      <h3>Publicar un animal nuevo 🐾</h3>
+      <div class="form-grid">
+        <div class="campo ancho"><label>Tipo de animal</label>
+  <select id="p-tipo">
+    <option value="" disabled selected>Seleccioná</option>
+    <option value="perro">🐕 Perro</option>
+    <option value="gato">🐈 Gato</option>
+  </select>
+</div>
+<div class="campo"><label>Nombre</label><input type="text" id="p-nombre" placeholder="Ej: Tango"></div>
+        <div class="campo">
+  <label>Edad</label>
+  <div style="display:flex; gap:6px;">
+    <input type="number" id="p-edad-num" min="0" max="365" step="1" placeholder="Ej: 45" style="flex:1; padding:10px; border-radius:11px; border:2px solid rgba(44,24,16,.2); background:var(--bg); font-family:'Inter',sans-serif; font-size:13px; color:var(--ink);">
+    <select id="p-edad-unidad" style="width:90px; padding:10px; border-radius:11px; border:2px solid rgba(44,24,16,.2); background:var(--bg); font-family:'Inter',sans-serif; font-size:13px; color:var(--ink);">
+      <option value="dias">días</option>
+      <option value="meses">meses</option>
+      <option value="anios" selected>años</option>
+    </select>
+  </div>
+</div>
+        <div class="campo"><label>Tamaño</label>
+          <select id="p-tamanio">
+            <option value="" disabled selected>Seleccioná</option>
+            <option value="chico">Chico</option><option value="mediano">Mediano</option><option value="grande">Grande</option>
+          </select>
+        </div>
+        <div class="campo"><label>Personalidad</label>
+          <select id="p-energia">
+            <option value="" disabled selected>Seleccioná</option>
+            <option value="baja">Tranquilo</option><option value="media">Juguetón</option><option value="alta">Enérgico</option>
+          </select>
+        </div>
+        <div class="campo"><label>¿Bueno con chicos?</label>
+          <div class="si-no" data-campo="chicos"><button type="button">Sí</button><button type="button">No</button></div>
+        </div>
+        <div class="campo"><label>¿Bueno con otros animales?</label>
+          <div class="si-no" data-campo="otros"><button type="button">Sí</button><button type="button">No</button></div>
+        </div>
+        <div class="campo ancho"><label>Meses en el refugio</label><input type="number" id="p-meses" min="0" max="240" placeholder="Ej: 8"></div>
+        <div class="campo ancho"><label>Foto (URL, opcional)</label><input type="text" id="p-foto" placeholder="Ej: https://..."></div>
+        <div class="campo ancho"><label>Descripción breve (opcional)</label><input type="text" id="p-descripcion" placeholder="Ej: Le encanta correr y es muy cariñoso"></div>
+      </div>
+      <button class="btn-grande" id="btn-publicar" disabled onclick="publicarPerro()">Publicar 🐾</button>
+    </div>
+  </div>
+
+  <!-- Chat panel (aparece dentro de solicitudes) -->
+  <div id="vista-chat" class="oculto">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <h3 id="chat-titulo">Chat</h3>
+        <button class="chat-cerrar" onclick="cerrarChat()">← Volver</button>
+      </div>
+      <div class="mensajes" id="mensajes"></div>
+      <div class="chat-input">
+        <input type="text" id="chat-texto" placeholder="Escribí un mensaje..." onkeydown="if(event.key==='Enter') enviarMensaje()">
+        <button class="btn-enviar" onclick="enviarMensaje()">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const sesion=JSON.parse(localStorage.getItem("sesionOlfato")||"null");
+if(!sesion||(sesion.usuario.rol!=="refugio"&&sesion.usuario.rol!=="admin")){location.href="/";}
+else{
+  const org=(sesion.usuario.datos_refugio||{}).organizacion;
+  document.getElementById("subtitulo").textContent=(org||sesion.usuario.nombre)+" · gestión de adopciones";
+}
+
+function salir(){localStorage.removeItem("sesionOlfato");location.href="/";}
+function cabeceras(extra){return Object.assign({"X-Token":sesion.token},extra||{});}
+const respuestasPerro={chicos:null,otros:null};
+
+function cambiarTab(tab){
+  ["solicitudes","perros","cargar","chat"].forEach(t=>{
+    document.getElementById("tab-"+t)?.classList.toggle("active",t===tab);
+    document.getElementById("vista-"+t).classList.toggle("oculto",t!==tab);
+  });
+  if(tab==="solicitudes") cargarSolicitudes();
+  if(tab==="perros") cargarPerros();
+}
+
+function mostrarAviso(texto){
+  const av=document.getElementById("aviso");
+  av.textContent=texto; av.classList.remove("oculto");
+  setTimeout(()=>av.classList.add("oculto"),3500);
+}
+
+async function cargarSolicitudes(){
+  const v=document.getElementById("vista-solicitudes");
+  try{
+    const resp=await fetch("/api/solicitudes",{headers:cabeceras()});
+    if(resp.status===403){salir();return;}
+    const solicitudes=await resp.json();
+    const pendientes=solicitudes.filter(s=>s.estado==="pendiente");
+    const resueltas=solicitudes.filter(s=>s.estado!=="pendiente");
+    if(solicitudes.length===0){
+      v.innerHTML=`<div class="vacio">📭 Todavía no hay solicitudes.<br>Cuando alguien toque "Quiero conocerlo", aparecen acá.</div>`;
+      return;
+    }
+    let html="";
+    for(const s of pendientes){
+      const inf=s.informe||{};
+      html+=`<div class="tarjeta">
+        <h3>${s.adoptante} quiere adoptar a ${s.perro_nombre}
+          <span class="chip ${inf.apto_preliminar?'apto':'revisar'}">${inf.apto_preliminar?'APTO':'REVISAR'}</span>
+        </h3>
+        ${(inf.alertas||[]).map(a=>`<p class="linea alerta">⚠️ ${a}</p>`).join("")}
+        ${(inf.fortalezas||[]).map(f=>`<p class="linea fortaleza">💪 ${f}</p>`).join("")}
+        ${inf.vivienda_detalle?`<p class="linea">🏠 ${inf.vivienda_detalle}</p>`:""}
+        <div class="botones">
+          <button class="btn btn-aprobar" onclick="decidir(${s.id},'aprobada')">💛 Aprobar</button>
+          <button class="btn btn-rechazar" onclick="mostrarMotivo(${s.id})">Rechazar</button>
+        </div>
+        <div class="motivo-caja" id="motivo-${s.id}">
+          <input type="text" id="motivo-texto-${s.id}" placeholder="Motivo del rechazo">
+          <button onclick="rechazarConMotivo(${s.id})">Confirmar</button>
+        </div>
+      </div>`;
+    }
+    if(pendientes.length===0) html+=`<div class="vacio">✅ No hay solicitudes pendientes.</div>`;
+    if(resueltas.length>0){
+      html+=`<div class="tarjeta"><h3>Historial</h3>`+
+        resueltas.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(44,24,16,.1);">
+          <span class="linea">${s.estado==="aprobada"?"💛":"✖️"} ${s.adoptante} → ${s.perro_nombre}</span>
+          ${s.estado==="aprobada"?`<span style="display:flex;gap:6px;margin-top:6px;"><button onclick="abrirChat(${s.id},'${s.perro_nombre}')" style="padding:5px 12px;font-size:12px;font-weight:700;background:var(--mustard);border:1.5px solid var(--ink);border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;">💬 Chat</button><button onclick="borrarChat(${s.id})" style="padding:5px 10px;font-size:11px;font-weight:700;background:var(--red);color:#FFFDF8;border:1.5px solid var(--ink);border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;">🗑️</button></span>`:""}
+        </div>`).join("")+
+        `</div>`;
+    }
+    v.innerHTML=html;
+  }catch(e){v.innerHTML=`<div class="vacio">⚠️ No pude hablar con el servidor.</div>`;}
+}
+
+function mostrarMotivo(id){document.getElementById("motivo-"+id).classList.add("visible");}
+
+async function decidir(id,decision,motivo=""){
+  await fetch("/api/solicitudes/decidir",{method:"POST",headers:cabeceras({"Content-Type":"application/json"}),body:JSON.stringify({id,decision,motivo})});
+  mostrarAviso(decision==="aprobada"?"💛 Aprobada. Se envió el mensaje de bienvenida al adoptante 🐾":"Solicitud rechazada.");
+  cargarSolicitudes();
+}
+
+function rechazarConMotivo(id){
+  const motivo=document.getElementById("motivo-texto-"+id).value.trim();
+  if(!motivo){mostrarAviso("⚠️ Escribí un motivo.");return;}
+  decidir(id,"rechazada",motivo);
+}
+
+async function cargarPerros(){
+  const v=document.getElementById("vista-perros");
+  try{
+    const resp=await fetch("/api/perros/todos",{headers:cabeceras()});
+    if(resp.status===403){salir();return;}
+    const perros=await resp.json();
+    if(perros.length===0){v.innerHTML=`<div class="vacio">Todavía no publicaste animales. Usá "+ Cargar animal" 🐾</div>`;return;}
+    v.innerHTML=`<div class="tarjeta"><table>
+      <tr><th>Nombre</th><th>Edad</th><th>Tamaño</th><th>Espera</th><th>Interesados</th><th>Estado</th><th></th></tr>
+      ${perros.map(p=>{
+        const btnEstado = p.estado==="adoptado"
+          ? `<button onclick="reactivarPerro(${p.id})" style="padding:4px 10px;font-size:11px;font-weight:700;background:var(--tan);color:var(--ink);border:1.5px solid var(--ink);border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;">↩️ Reactivar</button>`
+          : (p.estado==="disponible"||p.estado==="en proceso de adopción")
+          ? `<button onclick="marcarAdoptado(${p.id})" style="padding:4px 10px;font-size:11px;font-weight:700;background:var(--green);color:#FFFDF8;border:1.5px solid var(--ink);border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;">✅ Adoptado</button>`
+          : "";
+        return `<tr><td><b>${p.nombre}</b>${p.likes<10&&p.meses_espera>=8?" 🦴":""}</td><td>${p.edad_anios}a</td><td>${p.tamanio}</td><td>${p.meses_espera}m</td><td>${p.likes}</td><td><span class="chip estado">${p.estado}</span></td><td>${btnEstado}</td></tr>`;
+      }).join("")}
+    </table><p class="nota">🦴 = impulso extra por meses de espera.</p></div>`;
+  }catch(e){v.innerHTML=`<div class="vacio">⚠️ No pude hablar con el servidor.</div>`;}
+}
+
+document.querySelectorAll(".si-no").forEach(grupo=>{
+  const campo=grupo.dataset.campo;
+  const [btnSi,btnNo]=grupo.querySelectorAll("button");
+  btnSi.onclick=()=>{respuestasPerro[campo]=true;btnSi.classList.add("activo");btnNo.classList.remove("activo");validarPerro();};
+  btnNo.onclick=()=>{respuestasPerro[campo]=false;btnNo.classList.add("activo");btnSi.classList.remove("activo");validarPerro();};
+});
+["p-nombre","p-edad-num","p-meses"].forEach(id=>document.getElementById(id).addEventListener("input",validarPerro));
+["p-tamanio","p-energia","p-tipo","p-edad-unidad"].forEach(id=>document.getElementById(id).addEventListener("change",validarPerro));
+
+function validarPerro(){
+  const ok=document.getElementById("p-nombre").value.trim()&&document.getElementById("p-tipo").value!==""&&document.getElementById("p-edad-num").value!==""&&document.getElementById("p-tamanio").value!==""&&document.getElementById("p-energia").value!==""&&document.getElementById("p-meses").value!==""&&Object.values(respuestasPerro).every(v=>v!==null);
+  document.getElementById("btn-publicar").disabled=!ok;
+}
+
+async function publicarPerro(){
+  const meses=parseInt(document.getElementById("p-meses").value);
+  const nombre=document.getElementById("p-nombre").value.trim();
+  const resp=await fetch("/api/perros",{method:"POST",headers:cabeceras({"Content-Type":"application/json"}),body:JSON.stringify({nombre,
+      tipo:document.getElementById("p-tipo").value,
+      edad_raw:parseFloat(document.getElementById("p-edad-num").value),
+      edad_unidad:document.getElementById("p-edad-unidad").value,
+      edad_anios:document.getElementById("p-edad-unidad").value==="dias"?parseFloat(document.getElementById("p-edad-num").value)/365:document.getElementById("p-edad-unidad").value==="meses"?parseFloat(document.getElementById("p-edad-num").value)/12:parseFloat(document.getElementById("p-edad-num").value),
+      tamanio:document.getElementById("p-tamanio").value,energia:document.getElementById("p-energia").value,bueno_con_chicos:respuestasPerro.chicos,bueno_con_otros:respuestasPerro.otros,meses_espera:meses,foto_url:document.getElementById("p-foto").value.trim()||null,descripcion:document.getElementById("p-descripcion").value.trim()||null})});
+  if(resp.status===403){salir();return;}
+  mostrarAviso(`✅ ¡${nombre} publicado! ${meses>=8?"El algoritmo le da impulso extra 🦴":"Ya aparece en la app."}`);
+  ["p-nombre","p-edad-num","p-meses","p-foto","p-descripcion"].forEach(id=>document.getElementById(id).value="");
+  ["p-tamanio","p-energia","p-tipo","p-edad-unidad"].forEach(id=>document.getElementById(id).selectedIndex=0);
+  document.querySelectorAll(".si-no button").forEach(b=>b.classList.remove("activo"));
+  respuestasPerro.chicos=null;respuestasPerro.otros=null;
+  validarPerro();
+}
+
+// ===== Chat =====
+let chatSolId=null, sseConexion=null;
+
+async function abrirChat(solId, nombrePerro){
+  chatSolId=solId;
+  document.getElementById("vista-solicitudes").classList.add("oculto");
+  document.getElementById("vista-chat").classList.remove("oculto");
+  document.getElementById("chat-titulo").textContent=`Chat sobre ${nombrePerro}`;
+  const mensajesDiv=document.getElementById("mensajes");
+  mensajesDiv.innerHTML="";
+  try{
+    const resp=await fetch(`/api/mensajes/${solId}`,{headers:cabeceras()});
+    const historial=await resp.json();
+    historial.forEach(m=>agregarBurbuja(m));
+    mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+  }catch(e){}
+  if(sseConexion) sseConexion.close();
+  sseConexion=new EventSource(`/api/sse/${solId}?token=${sesion.token}`);
+  sseConexion.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.rol==="adoptante"){
+      agregarBurbuja(msg);
+      mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+    }
+  };
+}
+
+function agregarBurbuja(m){
+  const org=(sesion.usuario.datos_refugio||{}).organizacion||sesion.usuario.nombre;
+  const mia=m.rol==="refugio";
+  const auto=m.automatico;
+  const div=document.createElement("div");
+  div.className=`burbuja ${auto?"auto":mia?"mia":"suya"}`;
+  div.innerHTML=`${!mia?`<div class="burbuja-autor">${m.autor}</div>`:""}${m.texto}`;
+  document.getElementById("mensajes").appendChild(div);
+}
+
+async function enviarMensaje(){
+  const input=document.getElementById("chat-texto");
+  const texto=input.value.trim();
+  if(!texto||!chatSolId) return;
+  input.value="";
+  const div=document.createElement("div");
+  div.className="burbuja mia";
+  div.textContent=texto;
+  const mensajesDiv=document.getElementById("mensajes");
+  mensajesDiv.appendChild(div);
+  mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+  try{
+    await fetch("/api/mensajes",{method:"POST",headers:cabeceras({"Content-Type":"application/json"}),body:JSON.stringify({solicitud_id:chatSolId,texto})});
+  }catch(e){}
+}
+
+function cerrarChat(){
+  if(sseConexion){sseConexion.close();sseConexion=null;}
+  document.getElementById("vista-chat").classList.add("oculto");
+  document.getElementById("vista-solicitudes").classList.remove("oculto");
+  cargarSolicitudes();
+}
+
+
+async function marcarAdoptado(perroId){
+  await fetch("/api/perros/adoptado", {
+    method:"POST",
+    headers:cabeceras({"Content-Type":"application/json"}),
+    body:JSON.stringify({perro_id: perroId, estado: "adoptado"}),
+  });
+  mostrarAviso("💛 ¡Marcado como adoptado! Ya no aparece en el mazo.");
+  cargarPerros();
+}
+
+async function reactivarPerro(perroId){
+  await fetch("/api/perros/adoptado", {
+    method:"POST",
+    headers:cabeceras({"Content-Type":"application/json"}),
+    body:JSON.stringify({perro_id: perroId, estado: "disponible"}),
+  });
+  mostrarAviso("↩️ Perro reactivado. Vuelve a aparecer en la app.");
+  cargarPerros();
+}
+
+async function borrarChat(solId){
+  await fetch("/api/solicitudes/archivar", {
+    method:"POST",
+    headers:cabeceras({"Content-Type":"application/json"}),
+    body:JSON.stringify({solicitud_id: solId}),
+  });
+  mostrarAviso("Conversación archivada.");
+  cargarSolicitudes();
+}
+
+cargarSolicitudes();
+</script>
+</body>
+</html>

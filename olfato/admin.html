@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olfato — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDD8; --ink:#2C1810; --red:#C8432A; --green:#4E8A57;
+    --mustard:#E8A93C; --card:#FFFDF8; --tan:#F0E2C8; --ink-light:#6B5040;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif;
+    min-height:100vh; padding:20px; display:flex; justify-content:center;
+    position:relative; overflow-x:hidden;
+  }
+  .panel{width:100%; max-width:640px; position:relative; z-index:1;}
+
+  /* Patitas de fondo */
+  .bg-art{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
+  .paw{position:absolute; opacity:0.04; font-size:55px; animation:flotar 7s ease-in-out infinite;}
+  .paw:nth-child(1){top:8%; right:3%; animation-delay:0s;}
+  .paw:nth-child(2){bottom:25%; left:2%; font-size:38px; animation-delay:2s;}
+  .paw:nth-child(3){bottom:8%; right:5%; font-size:45px; animation-delay:1s;}
+  @keyframes flotar{
+    0%,100%{transform:translateY(0) rotate(-8deg);}
+    50%{transform:translateY(-12px) rotate(4deg);}
+  }
+
+  /* Header */
+  .header{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .logo-paw{
+    width:42px; height:42px; border-radius:50%; background:var(--mustard);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink);
+    animation:pulso 3s ease-in-out infinite;
+  }
+  @keyframes pulso{
+    0%,100%{transform:rotate(-8deg);}
+    50%{transform:rotate(-2deg) scale(1.05);}
+  }
+  .logo-text{font-family:'Fraunces',serif; font-size:22px; font-weight:900; letter-spacing:-0.5px;}
+  .salir{
+    margin-left:auto; font-size:12px; font-weight:600; padding:6px 14px;
+    border-radius:99px; background:var(--card); border:1.5px solid var(--ink);
+    cursor:pointer; font-family:'Inter',sans-serif;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .salir:hover{transform:translateY(-1px); box-shadow:2px 2px 0 var(--ink);}
+  .sub{font-size:13px; color:var(--ink-light); margin-bottom:16px; margin-top:2px;}
+
+  /* Tarjetas */
+  .tarjeta{
+    background:var(--card); border:2.5px solid var(--ink); border-radius:20px;
+    padding:16px; margin-bottom:14px; box-shadow:4px 4px 0 var(--ink);
+    animation:aparece .4s cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+  @keyframes aparece{
+    from{transform:translateY(12px); opacity:0;}
+    to{transform:none; opacity:1;}
+  }
+  .tarjeta h3{font-family:'Fraunces',serif; font-size:17px; font-weight:900; margin-bottom:8px;}
+  .linea{font-size:13px; margin:4px 0;}
+  .linea b{font-weight:700;}
+
+  .consejo{
+    font-size:12px; padding:10px 14px; border-radius:12px;
+    background:var(--tan); margin-top:10px; line-height:1.5;
+    border:1.5px solid rgba(44,24,16,.15);
+  }
+
+  /* Botones */
+  .botones{display:flex; gap:8px; margin-top:12px;}
+  .btn{
+    flex:1; padding:10px; border-radius:12px; font-weight:700; font-size:13px;
+    cursor:pointer; border:2px solid var(--ink); font-family:'Inter',sans-serif;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:3px 3px 0 var(--ink);}
+  .btn:active{transform:translateY(1px); box-shadow:none;}
+  .btn-aprobar{background:var(--green); color:#FFFDF8; border-color:var(--green);}
+  .btn-rechazar{background:var(--card); color:var(--red); border-color:var(--red);}
+
+  .vacio{text-align:center; padding:40px 20px; color:var(--ink-light); font-size:14px; line-height:1.6;}
+  .aviso{
+    padding:10px 14px; border-radius:12px; background:var(--tan);
+    font-size:13px; font-weight:600; text-align:center; margin-bottom:12px;
+    border:1.5px solid rgba(44,24,16,.2);
+  }
+  .oculto{display:none !important;}
+</style>
+</head>
+<body>
+<div class="bg-art">
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+</div>
+
+<div class="panel">
+  <div class="header">
+    <span class="logo-paw">🔎</span>
+    <span class="logo-text">Olfato — Verificación</span>
+    <button class="salir" onclick="salir()">Salir</button>
+  </div>
+  <p class="sub">Revisá cada solicitud antes de aprobar — la confianza de Olfato depende de esto.</p>
+  <div id="aviso" class="aviso oculto"></div>
+  <div id="lista"></div>
+</div>
+
+<script>
+const sesion=JSON.parse(localStorage.getItem("sesionOlfato")||"null");
+if(!sesion||sesion.usuario.rol!=="admin"){ location.href="/"; }
+
+function salir(){localStorage.removeItem("sesionOlfato"); location.href="/";}
+
+function mostrarAviso(texto){
+  const av=document.getElementById("aviso");
+  av.textContent=texto; av.classList.remove("oculto");
+  setTimeout(()=>av.classList.add("oculto"),3500);
+}
+
+async function cargarPendientes(){
+  const v=document.getElementById("lista");
+  try{
+    const resp=await fetch("/api/admin/refugios-pendientes",{headers:{"X-Token":sesion.token}});
+    if(resp.status===403){salir();return;}
+    const pendientes=await resp.json();
+    if(pendientes.length===0){
+      v.innerHTML=`<div class="vacio">✅ No hay refugios esperando verificación.<br>Cuando alguien se registre como refugio, aparece acá.</div>`;
+      return;
+    }
+    v.innerHTML=pendientes.map((u,i)=>{
+      const d=u.datos_refugio||{};
+      const linkRedes=d.redes&&d.redes.startsWith("@")
+        ?`<a href="https://instagram.com/${d.redes.slice(1)}" target="_blank" style="color:var(--red); font-weight:700;">${d.redes}</a>`
+        :(d.redes||"—");
+      return `<div class="tarjeta" style="animation-delay:${i*0.08}s">
+        <h3>🏠 ${d.organizacion||"(sin nombre de organización)"}</h3>
+        <p class="linea"><b>Responsable:</b> ${u.nombre} · ${u.email}</p>
+        <p class="linea"><b>Zona:</b> ${d.zona||"—"}</p>
+        <p class="linea"><b>Redes:</b> ${linkRedes}</p>
+        <p class="linea"><b>Teléfono:</b> ${d.telefono||"—"}</p>
+        <p class="linea"><b>Sobre su trabajo:</b> ${d.descripcion||"—"}</p>
+        <div class="consejo">🔎 Checklist: ¿el Instagram tiene historia real de rescates? ¿Hay adopciones concretadas? ¿Comentarios genuinos? Ante la duda, llamalos antes de decidir.</div>
+        <div class="botones">
+          <button class="btn btn-aprobar" onclick="decidir(${u.id},'aprobar','${(d.organizacion||u.nombre).replace(/'/g,"")}')">✅ Aprobar</button>
+          <button class="btn btn-rechazar" onclick="decidir(${u.id},'rechazar','${(d.organizacion||u.nombre).replace(/'/g,"")}')">Rechazar</button>
+        </div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    v.innerHTML=`<div class="vacio">⚠️ No pude hablar con el servidor.</div>`;
+  }
+}
+
+async function decidir(id, decision, nombre){
+  await fetch("/api/admin/decidir",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","X-Token":sesion.token},
+    body:JSON.stringify({usuario_id:id, decision}),
+  });
+  mostrarAviso(decision==="aprobar"
+    ?`✅ ${nombre} aprobado. ¡Mandales un mensajito de bienvenida! 🐾`
+    :`${nombre} rechazado.`);
+  cargarPendientes();
+}
+
+cargarPendientes();
+</script>
+</body>
+</html>

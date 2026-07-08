@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olfato</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,900;1,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDD8; --ink:#2C1810; --red:#C8432A; --green:#4E8A57;
+    --mustard:#E8A93C; --card:#FFFDF8; --tan:#F0E2C8; --ink-light:#6B5040;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .app{width:100%; max-width:380px; height:min(740px,94vh); display:flex; flex-direction:column;}
+
+  /* Header */
+  .header{
+    display:flex; align-items:center; gap:10px; padding:0 0 14px;
+    flex-shrink:0;
+  }
+  .logo-paw{
+    width:42px; height:42px; border-radius:50%; background:var(--red);
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+    border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink);
+    animation:pulso 2.8s ease-in-out infinite;
+  }
+  @keyframes pulso{0%,100%{transform:rotate(-8deg) scale(1);}50%{transform:rotate(-3deg) scale(1.06);}}
+  .logo-text{font-family:'Fraunces',serif; font-size:26px; font-weight:900; letter-spacing:-1px;}
+
+  /* Contenido central */
+  .contenido{flex:1; overflow:hidden; position:relative;}
+  .pantalla{position:absolute; inset:0; display:flex; flex-direction:column; transition:opacity .25s; overflow:hidden;}
+  .pantalla.oculto{opacity:0; pointer-events:none;}
+
+  /* ===== DESCUBRIR ===== */
+  .stage{position:relative; flex:1; overflow:hidden;}
+  .card-back{position:absolute; inset:0; border-radius:24px; background:var(--card); border:2px solid rgba(44,24,16,.13); transform:scale(.95) translateY(10px);}
+  .card{
+    position:absolute; inset:0; border-radius:24px; overflow:hidden;
+    display:flex; flex-direction:column; background:var(--card);
+    border:2.5px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+    transition:all .34s cubic-bezier(0.34,1.2,0.64,1);
+    animation:entrar .5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes entrar{from{transform:translateY(24px) scale(.96); opacity:0;}to{transform:none; opacity:1;}}
+  .card.boost{border-color:var(--mustard); box-shadow:5px 5px 0 var(--mustard);}
+  .card.salir-arriba{transform:translateY(-120%) scale(.9)!important; opacity:0!important; transition:all .34s ease!important;}
+  .card.salir-fade{transform:scale(.92)!important; opacity:0!important; transition:all .34s ease!important;}
+  .foto-wrap{position:relative; height:46%; flex-shrink:0; overflow:hidden; background:#C5B5A0;}
+  .foto-wrap img{width:100%; height:100%; object-fit:cover; display:block;}
+  .foto-emoji{width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:100px;}
+  .banda{position:absolute; top:0; left:0; right:0; z-index:2; padding:8px 14px; font-size:12px; font-weight:700; background:var(--mustard); color:var(--ink);}
+  .overlay{position:absolute; bottom:0; left:0; right:0; padding:50px 16px 14px; background:linear-gradient(transparent,rgba(25,10,4,.82)); color:#FFFDF8;}
+  .overlay-nombre{font-family:'Fraunces',serif; font-size:30px; font-weight:900; line-height:1;}
+  .overlay-edad{font-size:14px; font-weight:500; opacity:.9; margin-top:3px;}
+  .overlay-refugio{font-size:11px; font-weight:600; opacity:.75; margin-top:2px;}
+  .info{flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:9px; overflow:hidden;}
+  .afinidad-row{display:flex; align-items:center; gap:8px;}
+  .afinidad-label{font-size:11px; font-weight:700; color:var(--ink-light); text-transform:uppercase; letter-spacing:.5px; white-space:nowrap;}
+  .barra-wrap{flex:1; height:8px; background:var(--tan); border-radius:99px; overflow:hidden;}
+  .barra-fill{height:100%; background:var(--green); border-radius:99px; width:0%; transition:width 1s cubic-bezier(0.34,1.2,0.64,1);}
+  .afinidad-pct{font-size:13px; font-weight:700; color:var(--green); white-space:nowrap;}
+  .descripcion-perro{font-size:13px; color:var(--ink-light); line-height:1.4; font-style:italic;}
+  .tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:auto;}
+  .tag{font-size:12px; font-weight:600; padding:4px 11px; border-radius:99px; background:var(--tan); color:var(--ink); border:1.5px solid rgba(44,24,16,.2);}
+  .tag.meses{background:var(--mustard); border-color:#C88A1A;}
+  .tag.no{opacity:.45;}
+  .acciones{display:flex; gap:10px; padding:10px 0 0; flex-shrink:0;}
+  .btn-decision{flex:1; padding:13px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; border:2.5px solid var(--ink); font-family:'Inter',sans-serif; transition:transform .15s, box-shadow .15s;}
+  .btn-decision:hover{transform:translateY(-2px); box-shadow:3px 3px 0 var(--ink);}
+  .btn-decision:active{transform:translateY(1px); box-shadow:none;}
+  .btn-no{background:var(--card); color:var(--ink);}
+  .btn-si{background:var(--green); color:#FFFDF8; border-color:var(--green);}
+  .fin{position:absolute; inset:0; border-radius:24px; background:var(--card); border:2.5px dashed rgba(44,24,16,.35); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:32px; text-align:center;}
+  .fin h2{font-family:'Fraunces',serif; font-size:22px; font-weight:900;}
+
+  /* ===== AVISOS ===== */
+  .seccion-scroll{flex:1; overflow-y:auto; padding:4px 0;}
+  .seccion-titulo{font-family:'Fraunces',serif; font-size:22px; font-weight:900; margin-bottom:12px; flex-shrink:0;}
+  .notif-item{
+    background:var(--card); border:2px solid var(--ink); border-radius:16px;
+    padding:12px 14px; margin-bottom:10px; box-shadow:3px 3px 0 var(--ink);
+    display:flex; align-items:center; gap:10px;
+    animation:aparecer .3s cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+  @keyframes aparecer{from{transform:translateY(8px); opacity:0;}to{transform:none; opacity:1;}}
+  .notif-icono{font-size:22px; flex-shrink:0;}
+  .notif-texto{flex:1; min-width:0;}
+  .notif-titulo{font-weight:700; font-size:14px; line-height:1.3;}
+  .notif-sub{font-size:12px; color:var(--ink-light); margin-top:3px;}
+  .notif-nueva{width:9px; height:9px; border-radius:50%; background:var(--red); flex-shrink:0;}
+
+  /* ===== CHATS ===== */
+  .chat-item{
+    background:var(--card); border:2px solid var(--ink); border-radius:16px;
+    padding:12px 14px; margin-bottom:10px; box-shadow:3px 3px 0 var(--ink);
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    animation:aparecer .3s cubic-bezier(0.34,1.4,0.64,1) both;
+    transition:transform .15s;
+  }
+  .chat-item:hover{transform:translateY(-1px);}
+  .chat-avatar{width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; border:2px solid var(--ink);}
+  .chat-info{flex:1; min-width:0;}
+  .chat-nombre{font-weight:700; font-size:14px;}
+  .chat-preview{font-size:12px; color:var(--ink-light); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
+  .chat-badge{background:var(--red); color:#FFFDF8; font-size:11px; font-weight:700; min-width:20px; height:20px; border-radius:99px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;}
+
+  /* Chat abierto */
+  .chat-panel{flex:1; display:flex; flex-direction:column; overflow:hidden;}
+  .chat-header{padding:10px 0 10px; border-bottom:1.5px solid rgba(44,24,16,.12); display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .btn-back{padding:5px 10px; border-radius:99px; font-size:12px; font-weight:600; background:var(--tan); border:1.5px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif;}
+  .chat-header-nombre{font-family:'Fraunces',serif; font-size:16px; font-weight:900; flex:1;}
+  .mensajes{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:10px 0;}
+  .burbuja{max-width:80%; padding:10px 13px; border-radius:16px; font-size:14px; line-height:1.4; animation:aparecer .25s cubic-bezier(0.34,1.4,0.64,1) both;}
+  .burbuja.mia{background:var(--green); color:#FFFDF8; align-self:flex-end; border-bottom-right-radius:4px;}
+  .burbuja.suya{background:var(--tan); color:var(--ink); align-self:flex-start; border-bottom-left-radius:4px; border:1.5px solid rgba(44,24,16,.15);}
+  .burbuja.auto{background:var(--mustard); color:var(--ink); align-self:flex-start; border-bottom-left-radius:4px;}
+  .burbuja-autor{font-size:11px; font-weight:700; opacity:.7; margin-bottom:3px;}
+  .chat-input-row{display:flex; gap:8px; padding:10px 0 0; flex-shrink:0; border-top:1.5px solid rgba(44,24,16,.12);}
+  .chat-input-row input{flex:1; padding:10px 13px; border-radius:12px; border:2px solid rgba(44,24,16,.2); background:var(--bg)!important; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink)!important; -webkit-text-fill-color:var(--ink)!important;}
+  .chat-input-row input:focus{outline:none; border-color:var(--green);}
+  .chat-input-row input::placeholder{color:var(--ink-light); opacity:1;}
+  .btn-enviar{padding:10px 16px; border-radius:12px; font-weight:700; background:var(--green); color:#FFFDF8; border:2px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif;}
+
+  /* ===== PERFIL ===== */
+  .perfil-card{background:var(--card); border:2.5px solid var(--ink); border-radius:20px; padding:20px; box-shadow:4px 4px 0 var(--ink);}
+  .perfil-avatar{width:64px; height:64px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; font-size:28px; border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); margin-bottom:12px;}
+  .perfil-nombre{font-family:'Fraunces',serif; font-size:22px; font-weight:900; margin-bottom:4px;}
+  .perfil-email{font-size:13px; color:var(--ink-light); margin-bottom:16px;}
+  .perfil-linea{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1.5px solid rgba(44,24,16,.1); font-size:14px;}
+  .perfil-linea:last-child{border-bottom:none;}
+  .perfil-linea span{color:var(--ink-light); font-size:13px;}
+  .btn-perfil{width:100%; padding:12px; border-radius:14px; font-weight:700; font-size:14px; font-family:'Inter',sans-serif; cursor:pointer; border:2.5px solid var(--ink); margin-top:12px; transition:transform .15s, box-shadow .15s;}
+  .btn-perfil:hover{transform:translateY(-1px); box-shadow:3px 3px 0 var(--ink);}
+  .btn-editar{background:var(--tan); color:var(--ink);}
+  .btn-salir{background:var(--red); color:#FFFDF8; border-color:var(--red); margin-top:8px;}
+
+  /* ===== NAVBAR ===== */
+  .navbar{
+    display:flex; background:var(--card);
+    border-top:2.5px solid var(--ink); flex-shrink:0;
+    padding:8px 0 4px;
+  }
+  .nav-item{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; position:relative; transition:transform .15s;}
+  .nav-item:hover{transform:translateY(-1px);}
+  .nav-icono{font-size:22px;}
+  .nav-label{font-size:10px; font-weight:600; color:var(--ink-light); letter-spacing:.2px;}
+  .nav-item.activo .nav-label{color:var(--red); font-weight:700;}
+  .nav-item.activo .nav-icono{transform:scale(1.15);}
+  .nav-badge{position:absolute; top:2px; right:calc(50% - 18px); width:9px; height:9px; border-radius:50%; background:var(--red); border:1.5px solid var(--card);}
+
+  /* Formulario de perfil */
+  .form-scroll{flex:1; overflow-y:auto;}
+  .form-inner{display:flex; flex-direction:column; gap:13px; padding:4px 0;}
+  .campo label{display:block; font-size:11px; font-weight:700; margin-bottom:5px; color:var(--ink-light); text-transform:uppercase; letter-spacing:.4px;}
+  .campo input[type=text], .campo input[type=number], .campo select{width:100%; padding:10px 12px; border-radius:12px; border:2px solid rgba(44,24,16,.2); background:var(--bg)!important; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink)!important; -webkit-text-fill-color:var(--ink)!important; transition:border-color .2s;}
+  .campo input:focus, .campo select:focus{outline:none; border-color:var(--green);}
+  .campo input::placeholder{color:var(--ink-light); opacity:1;}
+  .si-no{display:flex; gap:8px;}
+  .si-no button{flex:1; padding:9px; border-radius:12px; font-weight:600; font-size:13px; border:2px solid rgba(44,24,16,.2); background:var(--bg); color:var(--ink); cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif;}
+  .si-no button.activo{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+  .btn-grande{width:100%; padding:13px; border-radius:14px; font-weight:700; font-size:14px; background:var(--green); color:#FFFDF8; border:2.5px solid var(--ink); cursor:pointer; font-family:'Inter',sans-serif; box-shadow:4px 4px 0 var(--ink); transition:transform .15s, box-shadow .15s; margin-top:4px;}
+  .btn-grande:hover{transform:translateY(-2px); box-shadow:6px 6px 0 var(--ink);}
+  .btn-grande:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:4px 4px 0 var(--ink);}
+
+  .aviso{padding:10px 14px; border-radius:12px; background:var(--tan); font-size:13px; font-weight:600; text-align:center; margin-bottom:10px; border:1.5px solid rgba(44,24,16,.2); flex-shrink:0;}
+  .aviso.error{background:#F5D1C8; color:var(--red);}
+  .vacio{text-align:center; padding:40px 20px; color:var(--ink-light); font-size:14px; line-height:1.6;}
+  .oculto{display:none !important;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <span class="logo-paw">🐾</span>
+    <span class="logo-text">Olfato</span>
+  </div>
+
+  <div id="aviso-global" class="aviso oculto"></div>
+
+  <div class="contenido">
+
+    <!-- ===== DESCUBRIR ===== -->
+    <div class="pantalla" id="p-descubrir">
+      <div class="stage" id="stage"></div>
+      <div class="acciones" id="acciones">
+        <button class="btn-decision btn-no" onclick="decidir(false)">Todavía no</button>
+        <button class="btn-decision btn-si" onclick="decidir(true)">🐾 Quiero conocerlo</button>
+      </div>
+    </div>
+
+    <!-- ===== AVISOS ===== -->
+    <div class="pantalla oculto" id="p-avisos" style="display:flex; flex-direction:column;">
+      <div class="seccion-titulo">Avisos</div>
+      <div class="seccion-scroll" id="lista-avisos"></div>
+    </div>
+
+    <!-- ===== CHATS ===== -->
+    <div class="pantalla oculto" id="p-chats" style="display:flex; flex-direction:column;">
+      <div id="vista-lista-chats" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <div class="seccion-titulo">Chats</div>
+        <div class="seccion-scroll" id="lista-chats"></div>
+      </div>
+      <div id="vista-chat-abierto" class="oculto" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <div class="chat-header">
+          <button class="btn-back" onclick="cerrarChat()">← Volver</button>
+          <span class="chat-header-nombre" id="chat-titulo-nombre">Chat</span>
+          <button onclick="archivarChat()" style="padding:5px 10px;border-radius:99px;font-size:11px;font-weight:600;background:var(--tan);border:1.5px solid var(--ink);cursor:pointer;font-family:'Inter',sans-serif;">🗑️</button>
+        </div>
+        <div class="mensajes" id="mensajes"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-texto" placeholder="Escribí un mensaje..." onkeydown="if(event.key==='Enter') enviarMensaje()">
+          <button class="btn-enviar" onclick="enviarMensaje()">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PERFIL ===== -->
+    <div class="pantalla oculto" id="p-perfil" style="display:flex; flex-direction:column;">
+      <div id="vista-perfil-info">
+        <div class="seccion-titulo">Mi perfil</div>
+        <div class="perfil-card">
+          <div class="perfil-avatar">🐾</div>
+          <div class="perfil-nombre" id="perfil-nombre-txt"></div>
+          <div class="perfil-email" id="perfil-email-txt"></div>
+          <div id="perfil-datos"></div>
+          <button class="btn-perfil btn-editar" onclick="mostrarEditarPerfil()">✏️ Editar mi perfil</button>
+          <button class="btn-perfil btn-salir" onclick="salir()">Salir de Olfato</button>
+        </div>
+      </div>
+      <div id="vista-editar-perfil" class="oculto" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-shrink:0;">
+          <button class="btn-back" onclick="ocultarEditarPerfil()">← Volver</button>
+          <span style="font-family:'Fraunces',serif; font-size:18px; font-weight:900;">Editar perfil</span>
+        </div>
+        <div class="form-scroll">
+          <div class="form-inner">
+            <div class="campo"><label>¿Dónde vivís?</label>
+              <select id="f-vivienda">
+                <option value="" disabled selected>Seleccioná una opción</option>
+                <option value="casa_con_patio">Casa con patio</option>
+                <option value="casa_sin_patio">Casa sin patio</option>
+                <option value="depto">Departamento</option>
+              </select>
+            </div>
+            <div class="campo"><label>¿Algo más sobre tu vivienda? (opcional)</label>
+              <input type="text" id="f-vivienda-detalle" placeholder="Ej: depto con balcón cerrado con red">
+            </div>
+            <div class="campo"><label>¿Horas solo el perro por día?</label>
+              <input type="number" id="f-horas" min="0" max="24" placeholder="Escribí un número">
+            </div>
+            <div class="campo"><label>¿Tuviste perros antes?</label>
+              <div class="si-no" data-campo="experiencia"><button type="button">Sí</button><button type="button">No</button></div>
+            </div>
+            <div class="campo"><label>¿Tenés otros animales?</label>
+              <div class="si-no" data-campo="otros"><button type="button">Sí</button><button type="button">No</button></div>
+            </div>
+            <div class="campo"><label>¿Hay niños en tu hogar?</label>
+              <div class="si-no" data-campo="ninos"><button type="button">Sí</button><button type="button">No</button></div>
+            </div>
+            <div class="campo"><label>¿Aceptás visita o videollamada previa?</label>
+              <div class="si-no" data-campo="visita"><button type="button">Sí</button><button type="button">No</button></div>
+            </div>
+            <button class="btn-grande" id="btn-guardar-perfil" disabled onclick="guardarPerfil()">Guardar cambios 🐾</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <div class="navbar">
+    <div class="nav-item activo" id="nav-descubrir" onclick="irA('descubrir')">
+      <span class="nav-icono">🐾</span>
+      <span class="nav-label">Descubrir</span>
+    </div>
+    <div class="nav-item" id="nav-avisos" onclick="irA('avisos')">
+      <span class="nav-icono">🔔</span>
+      <span class="nav-label">Avisos</span>
+    </div>
+    <div class="nav-item" id="nav-chats" onclick="irA('chats')">
+      <span class="nav-icono">💬</span>
+      <span class="nav-label">Chats</span>
+    </div>
+    <div class="nav-item" id="nav-perfil" onclick="irA('perfil')">
+      <span class="nav-icono">👤</span>
+      <span class="nav-label">Perfil</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const TAMANIO={chico:"perro chico",mediano:"perro mediano",grande:"perro grande"};
+const ENERGIA={baja:"tranquilo",media:"juguetón",alta:"enérgico"};
+const FOTOS_EJEMPLO={
+  "Bruno":"https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80",
+  "Luna":"https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80",
+  "Negrita":"https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&q=80",
+  "Pochoclo":"https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80",
+  "Morocha":"https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80",
+};
+const EMOJIS=["🐕","🐶","🐕‍🦺","🦮","🐩"];
+const GRADS=["linear-gradient(135deg,#5A5048,#2E2823)","linear-gradient(135deg,#C98BB9,#8B5E83)","linear-gradient(135deg,#8AA86B,#4E8A57)","linear-gradient(135deg,#D98E73,#A85638)","linear-gradient(135deg,#7FA8C9,#4A6B8A)"];
+
+function fotoDelPerro(p){
+  if(p.foto_url) return {tipo:"img",src:p.foto_url};
+  if(FOTOS_EJEMPLO[p.nombre]) return {tipo:"img",src:FOTOS_EJEMPLO[p.nombre]};
+  return {tipo:"emoji",emoji:EMOJIS[p.id%EMOJIS.length],grad:GRADS[p.id%GRADS.length]};
+}
+
+// ===== Sesión =====
+const sesion=JSON.parse(localStorage.getItem("sesionOlfato")||"null");
+if(!sesion||sesion.usuario.rol!=="adoptante"){location.href="/";}
+function salir(){localStorage.removeItem("sesionOlfato");location.href="/";}
+
+// ===== Navegación =====
+let seccionActual="descubrir";
+function irA(seccion){
+  document.querySelectorAll(".pantalla").forEach(p=>p.classList.add("oculto"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("activo"));
+  const p=document.getElementById("p-"+seccion);
+  if(p) p.classList.remove("oculto");
+  document.getElementById("nav-"+seccion)?.classList.add("activo");
+  document.getElementById("nav-"+seccion)?.querySelector(".nav-badge")?.remove();
+  seccionActual=seccion;
+  if(seccion==="avisos") cargarAvisos();
+  if(seccion==="chats") cargarListaChats();
+  if(seccion==="perfil") mostrarPerfil();
+}
+
+function mostrarAviso(texto,esError){
+  const av=document.getElementById("aviso-global");
+  av.textContent=texto; av.classList.remove("oculto","error");
+  if(esError) av.classList.add("error");
+  setTimeout(()=>av.classList.add("oculto"),4000);
+}
+
+function agregarBadge(seccion){
+  const nav=document.getElementById("nav-"+seccion);
+  if(!nav.querySelector(".nav-badge")){
+    const b=document.createElement("div");
+    b.className="nav-badge";
+    nav.appendChild(b);
+  }
+}
+
+// ===== Perfil y formulario =====
+let perfil=null, informe=null;
+const respuestas={experiencia:null,otros:null,ninos:null,visita:null};
+
+document.querySelectorAll(".si-no").forEach(grupo=>{
+  const campo=grupo.dataset.campo;
+  const [btnSi,btnNo]=grupo.querySelectorAll("button");
+  btnSi.onclick=()=>{respuestas[campo]=true;btnSi.classList.add("activo");btnNo.classList.remove("activo");validarForm();};
+  btnNo.onclick=()=>{respuestas[campo]=false;btnNo.classList.add("activo");btnSi.classList.remove("activo");validarForm();};
+});
+["f-horas"].forEach(id=>document.getElementById(id).addEventListener("input",validarForm));
+document.getElementById("f-vivienda").addEventListener("change",validarForm);
+
+function validarForm(){
+  const horas=document.getElementById("f-horas").value.trim();
+  const vivienda=document.getElementById("f-vivienda").value;
+  document.getElementById("btn-guardar-perfil").disabled=!(horas&&vivienda&&Object.values(respuestas).every(v=>v!==null));
+}
+
+function armarInforme(){
+  perfil={
+    nombre:sesion.usuario.nombre,
+    vivienda:document.getElementById("f-vivienda").value,
+    vivienda_detalle:document.getElementById("f-vivienda-detalle").value.trim(),
+    horas:parseInt(document.getElementById("f-horas").value)||0,
+    experiencia:respuestas.experiencia,
+    otros:respuestas.otros,
+    ninos:respuestas.ninos,
+    visita:respuestas.visita,
+  };
+  const alertas=[],fortalezas=[];
+  let apto=true;
+  if(!perfil.visita){alertas.push("No acepta visita o videollamada previa.");apto=false;}
+  if(perfil.horas>=10) alertas.push(`El perro quedaría solo ${perfil.horas} hs/día.`);
+  if(!perfil.experiencia) alertas.push("Primera vez con un perro: ofrecer acompañamiento.");
+  if(perfil.vivienda==="casa_con_patio") fortalezas.push("Casa con patio: apto para cualquier tamaño.");
+  if(perfil.experiencia) fortalezas.push("Tiene experiencia previa con perros.");
+  if(perfil.horas<=4) fortalezas.push("Mucho tiempo disponible para el animal.");
+  if(perfil.visita) fortalezas.push("Acepta visita o videollamada: muestra compromiso.");
+  informe={apto_preliminar:apto,alertas,fortalezas};
+  if(perfil.vivienda_detalle) informe.vivienda_detalle=perfil.vivienda_detalle;
+}
+
+function rellenarForm(p){
+  document.getElementById("f-vivienda").value=p.vivienda||"";
+  document.getElementById("f-vivienda-detalle").value=p.vivienda_detalle||"";
+  document.getElementById("f-horas").value=p.horas||"";
+  for(const campo of ["experiencia","otros","ninos","visita"]){
+    respuestas[campo]=p[campo];
+    const [btnSi,btnNo]=document.querySelector(`.si-no[data-campo=${campo}]`).querySelectorAll("button");
+    btnSi.classList.toggle("activo",p[campo]===true);
+    btnNo.classList.toggle("activo",p[campo]===false);
+  }
+  validarForm();
+}
+
+async function guardarPerfil(){
+  armarInforme();
+  await fetch("/api/perfil",{method:"POST",headers:{"Content-Type":"application/json","X-Token":sesion.token},body:JSON.stringify({perfil:{perfil,informe}})});
+  sesion.usuario.perfil={perfil,informe};
+  localStorage.setItem("sesionOlfato",JSON.stringify(sesion));
+  ocultarEditarPerfil();
+  mostrarAviso("✅ Perfil guardado. Tu mazo se actualiza automáticamente.");
+  cargarPerros();
+}
+
+function mostrarPerfil(){
+  document.getElementById("perfil-nombre-txt").textContent=sesion.usuario.nombre;
+  document.getElementById("perfil-email-txt").textContent=sesion.usuario.email;
+  const d=document.getElementById("perfil-datos");
+  if(perfil){
+    const VIVIENDA={casa_con_patio:"Casa con patio",casa_sin_patio:"Casa sin patio",depto:"Departamento"};
+    d.innerHTML=`
+      <div class="perfil-linea"><b>Vivienda</b><span>${VIVIENDA[perfil.vivienda]||perfil.vivienda}</span></div>
+      <div class="perfil-linea"><b>Horas solo</b><span>${perfil.horas} hs/día</span></div>
+      <div class="perfil-linea"><b>Experiencia</b><span>${perfil.experiencia?"Sí":"No"}</span></div>
+      <div class="perfil-linea"><b>Otros animales</b><span>${perfil.otros?"Sí":"No"}</span></div>
+    `;
+  }else{
+    d.innerHTML=`<p style="font-size:13px;color:var(--ink-light);margin-bottom:8px;">Completá tu perfil para ver perros personalizados.</p>`;
+  }
+}
+
+function mostrarEditarPerfil(){
+  document.getElementById("vista-perfil-info").classList.add("oculto");
+  document.getElementById("vista-editar-perfil").classList.remove("oculto");
+  if(perfil) rellenarForm(perfil);
+}
+function ocultarEditarPerfil(){
+  document.getElementById("vista-editar-perfil").classList.add("oculto");
+  document.getElementById("vista-perfil-info").classList.remove("oculto");
+  mostrarPerfil();
+}
+
+// ===== Afinidad y equidad =====
+function calcularAfinidad(p){
+  if(!perfil) return 0.5;
+  let a=0.5;
+  if(perfil.vivienda==="casa_con_patio") a+=0.15;
+  else if(perfil.vivienda==="depto"&&p.tamanio==="grande") a-=0.15;
+  else if(perfil.vivienda==="depto"&&p.tamanio==="chico") a+=0.10;
+  if(perfil.horas>=8){if(p.edad_anios<1) a-=0.25; if(p.energia==="baja") a+=0.15;}
+  else if(p.energia==="alta") a+=0.10;
+  if(!perfil.experiencia&&p.energia==="baja") a+=0.10;
+  if(!perfil.experiencia&&p.energia==="alta") a-=0.05;
+  if(perfil.ninos&&!p.bueno_con_chicos) a-=0.40;
+  if(perfil.otros&&!p.bueno_con_otros) a-=0.40;
+  return Math.max(0,Math.min(1,a));
+}
+function puntaje(p,af){return af+Math.min(p.meses_espera/12,1)*0.5-Math.min(p.likes/50,1)*0.3;}
+function esInvisible(p){return p.likes<10&&p.meses_espera>=8;}
+function armarMazo(perros){
+  const conAf=perros.map(p=>({...p,af:calcularAfinidad(p)}));
+  conAf.sort((a,b)=>puntaje(b,b.af)-puntaje(a,a.af));
+  const inv=conAf.filter(esInvisible),resto=conAf.filter(p=>!esInvisible(p));
+  const mazo=[];let i=0,j=0;
+  while(i<resto.length||j<inv.length){
+    if(mazo.length%3===2&&j<inv.length) mazo.push({...inv[j++],boost:true});
+    else if(i<resto.length) mazo.push({...resto[i++],boost:false});
+    else mazo.push({...inv[j++],boost:true});
+  }
+  return mazo;
+}
+
+// ===== Descubrir =====
+let mazo=[],indice=0,animando=false;
+async function cargarPerros(){
+  if(!perfil) return;
+  try{
+    const resp=await fetch("/api/perros");
+    mazo=armarMazo(await resp.json());
+    indice=0;
+    renderCarta();
+  }catch(e){}
+}
+
+function renderCarta(){
+  const stage=document.getElementById("stage");
+  const acciones=document.getElementById("acciones");
+  if(!perfil){
+    acciones.style.display="none";
+    stage.innerHTML=`<div class="fin"><div style="font-size:44px;">🐾</div><h2>Completá tu perfil</h2><p style="font-size:14px;color:var(--ink-light);">Andá a Perfil para configurar tus preferencias y ver los perros que más te convienen.</p></div>`;
+    return;
+  }
+  if(indice>=mazo.length){
+    acciones.style.display="none";
+    stage.innerHTML=`<div class="fin"><div style="font-size:44px;">🐾</div><h2>¡Olfateaste todo!</h2><p style="font-size:14px;color:var(--ink-light);">Tus solicitudes ya están con los refugios.</p></div>`;
+    return;
+  }
+  acciones.style.display="flex";
+  const p=mazo[indice];
+  const foto=fotoDelPerro(p);
+  const af=p.af,pct=Math.round(af*100);
+  const contenidoFoto=foto.tipo==="img"
+    ?`<img src="${foto.src}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="foto-emoji" style="display:none;">${EMOJIS[p.id%EMOJIS.length]}</div>`
+    :`<div class="foto-emoji" style="background:${foto.grad};">${foto.emoji}</div>`;
+  stage.innerHTML=`
+    ${indice+1<mazo.length?'<div class="card-back"></div>':""}
+    <div class="card ${p.boost?"boost":""}" id="carta-actual">
+      ${p.boost?`<div class="banda">🦴 Esperando hace ${p.meses_espera} meses</div>`:""}
+      <div class="foto-wrap">${contenidoFoto}
+        <div class="overlay">
+          <div class="overlay-nombre">${p.nombre}</div>
+          <div class="overlay-edad">${p.edad_raw ? p.edad_raw+(p.edad_unidad==="dias"?" días":p.edad_unidad==="meses"?" meses":" años") : p.edad_anios+" años"} · ${p.tipo==="gato"?"🐈 gato":"🐕 "+( TAMANIO[p.tamanio]||p.tamanio)} · ${ENERGIA[p.energia]||p.energia}</div>
+          ${p.refugio_nombre?`<div class="overlay-refugio">🏠 ${p.refugio_nombre}</div>`:""}
+        </div>
+      </div>
+      <div class="info">
+        <div class="afinidad-row">
+          <span class="afinidad-label">Afinidad</span>
+          <div class="barra-wrap"><div class="barra-fill" id="barra-${p.id}"></div></div>
+          <span class="afinidad-pct">${pct}%</span>
+        </div>
+        ${p.descripcion?`<div class="descripcion-perro">"${p.descripcion}"</div>`:""}
+        <div class="tags">
+          ${p.bueno_con_chicos?'<span class="tag">✓ Con chicos</span>':'<span class="tag no">✗ Sin chicos</span>'}
+          ${p.bueno_con_otros?'<span class="tag">✓ Con animales</span>':'<span class="tag no">✗ Sin animales</span>'}
+          ${p.meses_espera>=6?`<span class="tag meses">${p.meses_espera} meses esperando</span>`:""}
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{const b=document.getElementById(`barra-${p.id}`);if(b) b.style.width=pct+"%";},50);
+}
+
+async function decidir(quiere){
+  if(animando||indice>=mazo.length) return;
+  animando=true;
+  const p=mazo[indice];
+  document.getElementById("carta-actual").classList.add(quiere?"salir-arriba":"salir-fade");
+  if(quiere){
+    try{
+      await fetch("/api/solicitudes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({perro_id:p.id,perro_nombre:p.nombre,adoptante:perfil.nombre,informe})});
+      mostrarAviso(`💛 ¡Solicitud enviada por ${p.nombre}!${p.boost?" Elegiste a un invisible.":""}`);
+      agregarBadge("avisos");
+    }catch(e){mostrarAviso("⚠️ No se pudo enviar.",true);}
+  }
+  setTimeout(()=>{indice++;animando=false;renderCarta();},340);
+}
+
+// ===== Avisos =====
+async function cargarAvisos(){
+  const v=document.getElementById("lista-avisos");
+  try{
+    const resp=await fetch("/api/mis-solicitudes",{headers:{"X-Token":sesion.token}});
+    const solicitudes=await resp.json();
+    if(solicitudes.length===0){
+      v.innerHTML=`<div class="vacio">🔔 Todavía no hay avisos.<br>Cuando enviés una solicitud o un refugio responda, aparece acá.</div>`;
+      return;
+    }
+    const items=solicitudes.map((s,i)=>{
+      const e=s.estado==="pendiente"?{icon:"🐾",texto:`Enviaste una solicitud por ${s.perro_nombre}`}
+        :s.estado==="aprobada"?{icon:"💛",texto:`¡Tu solicitud por ${s.perro_nombre} fue aprobada!`,nueva:true}
+        :s.estado==="rechazada"?{icon:"✖️",texto:`Tu solicitud por ${s.perro_nombre} no fue aprobada${s.motivo_rechazo?`: ${s.motivo_rechazo}`:""}`}
+        :{icon:"📋",texto:`Solicitud por ${s.perro_nombre}: ${s.estado}`};
+      return `<div class="notif-item" style="animation-delay:${i*0.06}s">
+        <span class="notif-icono">${e.icon}</span>
+        <div class="notif-texto">
+          <div class="notif-titulo">${e.texto}</div>
+        </div>
+        ${e.nueva?'<div class="notif-nueva"></div>':""}
+      </div>`;
+    });
+    v.innerHTML=items.join("");
+  }catch(e){v.innerHTML=`<div class="vacio">⚠️ No pude cargar los avisos.</div>`;}
+}
+
+// ===== Chats =====
+let chatSolId=null, sseConexion=null;
+
+async function cargarListaChats(){
+  const v=document.getElementById("lista-chats");
+  try{
+    const resp=await fetch("/api/mis-solicitudes",{headers:{"X-Token":sesion.token}});
+    const solicitudes=await resp.json();
+    const aprobadas=solicitudes.filter(s=>s.estado==="aprobada");
+    if(aprobadas.length===0){
+      v.innerHTML=`<div class="vacio">💬 Todavía no tenés chats activos.<br>Aparecen cuando un refugio apruebe tu solicitud.</div>`;
+      return;
+    }
+    v.innerHTML=aprobadas.map((s,i)=>{
+      const grad=GRADS[s.perro_id%GRADS.length];
+      const emoji=EMOJIS[s.perro_id%EMOJIS.length];
+      return `<div class="chat-item" style="animation-delay:${i*0.06}s" onclick="abrirChat(${s.id},'${s.perro_nombre}',${s.perro_id})">
+        <div class="chat-avatar" style="background:${grad};">${emoji}</div>
+        <div class="chat-info">
+          <div class="chat-nombre">${s.perro_nombre}</div>
+          <div class="chat-preview">Tocá para abrir la conversación</div>
+        </div>
+      </div>`;
+    }).join("");
+    // Cargar último mensaje de cada chat
+    for(const s of aprobadas){
+      try{
+        const mr=await fetch(`/api/mensajes/${s.id}`,{headers:{"X-Token":sesion.token}});
+        const msgs=await mr.json();
+        if(msgs.length>0){
+          const ultimo=msgs[msgs.length-1];
+          const previewEl=document.querySelector(`.chat-item[onclick*="${s.id}"] .chat-preview`);
+          if(previewEl) previewEl.textContent=ultimo.texto;
+        }
+      }catch(e){}
+    }
+  }catch(e){v.innerHTML=`<div class="vacio">⚠️ Error al cargar chats.</div>`;}
+}
+
+async function abrirChat(solId,nombrePerro,perroId){
+  chatSolId=solId;
+  document.getElementById("vista-lista-chats").classList.add("oculto");
+  document.getElementById("vista-chat-abierto").classList.remove("oculto");
+  document.getElementById("chat-titulo-nombre").textContent=nombrePerro;
+  const mensajesDiv=document.getElementById("mensajes");
+  mensajesDiv.innerHTML="";
+  try{
+    const resp=await fetch(`/api/mensajes/${solId}`,{headers:{"X-Token":sesion.token}});
+    const historial=await resp.json();
+    historial.forEach(m=>agregarBurbuja(m));
+    mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+  }catch(e){}
+  if(sseConexion) sseConexion.close();
+  sseConexion=new EventSource(`/api/sse/${solId}?token=${sesion.token}`);
+  sseConexion.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.rol==="refugio"){
+      agregarBurbuja(msg);
+      mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+      if(seccionActual!=="chats") agregarBadge("chats");
+    }
+  };
+}
+
+function agregarBurbuja(m){
+  const mia=m.rol==="adoptante";
+  const auto=m.automatico;
+  const div=document.createElement("div");
+  div.className=`burbuja ${auto?"auto":mia?"mia":"suya"}`;
+  if(!mia) div.innerHTML=`<div class="burbuja-autor">${m.autor}</div>`;
+  div.innerHTML+=(mia?"":``)+m.texto;
+  document.getElementById("mensajes").appendChild(div);
+}
+
+async function enviarMensaje(){
+  const input=document.getElementById("chat-texto");
+  const texto=input.value.trim();
+  if(!texto||!chatSolId) return;
+  input.value="";
+  const div=document.createElement("div");
+  div.className="burbuja mia";
+  div.textContent=texto;
+  const mensajesDiv=document.getElementById("mensajes");
+  mensajesDiv.appendChild(div);
+  mensajesDiv.scrollTop=mensajesDiv.scrollHeight;
+  try{
+    await fetch("/api/mensajes",{method:"POST",headers:{"Content-Type":"application/json","X-Token":sesion.token},body:JSON.stringify({solicitud_id:chatSolId,texto})});
+  }catch(e){}
+}
+
+function cerrarChat(){
+  if(sseConexion){sseConexion.close();sseConexion=null;}
+  document.getElementById("vista-chat-abierto").classList.add("oculto");
+  document.getElementById("vista-lista-chats").classList.remove("oculto");
+  cargarListaChats();
+}
+
+async function archivarChat(){
+  if(!chatSolId) return;
+  await fetch("/api/solicitudes/archivar",{method:"POST",headers:{"Content-Type":"application/json","X-Token":sesion.token},body:JSON.stringify({solicitud_id:chatSolId})});
+  cerrarChat();
+  mostrarAviso("Chat archivado.");
+}
+
+// ===== Arranque =====
+const perfilGuardado=sesion.usuario.perfil;
+if(perfilGuardado&&perfilGuardado.perfil){
+  perfil=perfilGuardado.perfil;
+  informe=perfilGuardado.informe;
+}
+cargarPerros();
+</script>
+</body>
+</html>
