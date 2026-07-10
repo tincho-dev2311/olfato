@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olfato</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,900;1,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDD8; --ink:#2C1810; --red:#C8432A; --green:#4E8A57;
+    --mustard:#E8A93C; --card:#FFFDF8; --tan:#F0E2C8; --ink-light:#6B5040;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px; position:relative; overflow-x:hidden;
+  }
+
+  /* Patitas flotantes de fondo */
+  .bg-art{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .paw{
+    position:absolute; opacity:0.06; font-size:48px;
+    animation:flotar 6s ease-in-out infinite;
+  }
+  .paw:nth-child(1){ top:6%; left:4%; font-size:60px; animation-delay:0s; transform:rotate(-20deg); }
+  .paw:nth-child(2){ top:18%; right:6%; font-size:38px; animation-delay:1.2s; transform:rotate(15deg); }
+  .paw:nth-child(3){ top:52%; left:2%; font-size:70px; animation-delay:2s; transform:rotate(-10deg); }
+  .paw:nth-child(4){ top:68%; right:3%; font-size:44px; animation-delay:0.6s; transform:rotate(25deg); }
+  .paw:nth-child(5){ bottom:10%; left:28%; font-size:34px; animation-delay:1.8s; transform:rotate(-5deg); }
+  .paw:nth-child(6){ top:35%; right:1%; font-size:30px; animation-delay:3s; transform:rotate(10deg); }
+  @keyframes flotar{
+    0%,100%{ transform:translateY(0) rotate(var(--r,0deg)); }
+    50%{ transform:translateY(-14px) rotate(calc(var(--r,0deg) + 8deg)); }
+  }
+
+  /* Contenido */
+  .portada{
+    width:100%; max-width:380px; display:flex; flex-direction:column; gap:14px;
+    position:relative; z-index:1;
+    animation:entrar .6s cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+  @keyframes entrar{
+    from{transform:translateY(24px); opacity:0;}
+    to{transform:none; opacity:1;}
+  }
+
+  /* Logo */
+  .logo-wrap{display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:4px;}
+  .logo-circle{
+    width:76px; height:76px; background:var(--red); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:36px;
+    border:3px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+    animation:pulso 2.8s ease-in-out infinite;
+  }
+  @keyframes pulso{
+    0%,100%{transform:rotate(-8deg) scale(1);}
+    50%{transform:rotate(-3deg) scale(1.06);}
+  }
+  h1{
+    font-family:'Fraunces',serif; font-size:48px; font-weight:900;
+    letter-spacing:-2px; text-align:center; line-height:1; color:var(--ink);
+  }
+  .lema{font-size:14px; color:var(--ink-light); text-align:center; line-height:1.6;}
+  .lema em{font-family:'Fraunces',serif; font-style:italic; color:var(--red); font-size:15px; font-weight:700;}
+
+  /* Tabs */
+  .tabs{display:flex; gap:8px;}
+  .tab{
+    flex:1; padding:11px; border-radius:99px; font-size:14px; font-weight:700;
+    border:2.5px solid var(--ink); background:transparent; color:var(--ink);
+    cursor:pointer; transition:all .2s; font-family:'Inter',sans-serif;
+  }
+  .tab.active{background:var(--ink); color:var(--bg);}
+  .tab:hover:not(.active){background:var(--tan);}
+
+  /* Caja */
+  .caja{
+    background:var(--card); border:2.5px solid var(--ink); border-radius:22px;
+    padding:20px; display:flex; flex-direction:column; gap:13px;
+    box-shadow:5px 5px 0 var(--ink);
+  }
+
+  /* Campos */
+  .campo label{
+    display:block; font-size:11px; font-weight:700; color:var(--ink-light);
+    text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px;
+  }
+  .campo input, .campo textarea{
+    width:100%; padding:11px 13px; border-radius:13px;
+    border:2px solid rgba(44,24,16,.2); background:var(--bg) !important;
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink) !important;
+    -webkit-text-fill-color:var(--ink) !important;
+    transition:border-color .2s;
+  }
+  .campo input:focus, .campo textarea:focus{outline:none; border-color:var(--green);}
+  .campo input::placeholder{color:var(--ink-light); opacity:1;}
+
+  /* Roles */
+  .roles{display:flex; gap:8px;}
+  .rol{
+    flex:1; padding:14px 8px; border-radius:16px;
+    border:2px solid rgba(44,24,16,.2); background:var(--bg);
+    cursor:pointer; text-align:center; font-size:13px; font-weight:600;
+    color:var(--ink); transition:all .2s; font-family:'Inter',sans-serif; line-height:1.4;
+  }
+  .rol-emoji{font-size:26px; display:block; margin-bottom:5px;}
+  .rol.activo{border-color:var(--green); background:#DCEBD9; box-shadow:3px 3px 0 var(--green);}
+  .rol:hover:not(.activo){background:var(--tan);}
+
+  /* Campos extra refugio */
+  #campos-refugio{display:flex; flex-direction:column; gap:12px;}
+
+  /* Botón */
+  .btn-grande{
+    width:100%; padding:14px; border-radius:16px; font-weight:700; font-size:15px;
+    background:var(--green); color:#FFFDF8; border:2.5px solid var(--ink);
+    cursor:pointer; font-family:'Inter',sans-serif;
+    box-shadow:4px 4px 0 var(--ink);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-grande:hover{transform:translateY(-2px); box-shadow:6px 6px 0 var(--ink);}
+  .btn-grande:active{transform:translateY(1px); box-shadow:2px 2px 0 var(--ink);}
+  .btn-grande:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:4px 4px 0 var(--ink);}
+
+  /* Aviso */
+  .aviso{
+    padding:12px 16px; border-radius:14px; font-size:13px; font-weight:600;
+    text-align:center; background:var(--tan); border:1.5px solid rgba(44,24,16,.2); line-height:1.5;
+  }
+  .aviso.error{background:#F5D1C8; color:var(--red); border-color:var(--red);}
+  .aviso.exito{background:#DCEBD9; color:#2D5E35; border-color:var(--green);}
+
+  .nota{font-size:12px; color:var(--ink-light); text-align:center; line-height:1.5;}
+  .oculto{display:none !important;}
+</style>
+</head>
+<body>
+
+<!-- Patitas de fondo -->
+<div class="bg-art">
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+  <span class="paw">🐾</span>
+</div>
+
+<div class="portada">
+  <div class="logo-wrap">
+    <div class="logo-circle">🐾</div>
+    <h1>Olfato</h1>
+    <p class="lema">Todos los perros merecen un hogar.<br><em>Hasta los que nadie mira.</em></p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-ingresar" onclick="cambiarTab('ingresar')">Ingresar</button>
+    <button class="tab" id="tab-crear" onclick="cambiarTab('crear')">Crear cuenta</button>
+  </div>
+
+  <div id="aviso" class="aviso oculto"></div>
+
+  <!-- Ingresar -->
+  <div class="caja" id="caja-ingresar">
+    <div class="campo"><label>Email</label><input type="email" id="l-email" placeholder="tu@email.com"></div>
+    <div class="campo"><label>Clave</label><input type="password" id="l-clave" placeholder="Tu clave"></div>
+    <button class="btn-grande" onclick="ingresar()">Entrar 🐕</button>
+  </div>
+
+  <!-- Crear cuenta -->
+  <div class="caja oculto" id="caja-crear">
+    <div class="campo">
+      <label>¿Qué querés hacer en Olfato?</label>
+      <div class="roles">
+        <button class="rol" id="rol-adoptante" onclick="elegirRol('adoptante')">
+          <span class="rol-emoji">🐕</span>Quiero adoptar
+        </button>
+        <button class="rol" id="rol-refugio" onclick="elegirRol('refugio')">
+          <span class="rol-emoji">🏠</span>Soy refugio / rescatista
+        </button>
+      </div>
+    </div>
+    <div class="campo"><label>Tu nombre</label><input type="text" id="r-nombre" placeholder="Nombre y apellido"></div>
+    <div class="campo"><label>Email</label><input type="email" id="r-email" placeholder="tu@email.com"></div>
+    <div class="campo"><label>Clave</label><input type="password" id="r-clave" placeholder="Elegí una clave"></div>
+
+    <div id="campos-refugio" class="oculto">
+      <div class="campo"><label>Nombre del refugio u organización</label><input type="text" id="r-org" placeholder="Ej: Refugio Patitas del Sur"></div>
+      <div class="campo"><label>Zona donde trabajan</label><input type="text" id="r-zona" placeholder="Ej: San Fernando, zona norte GBA"></div>
+      <div class="campo"><label>Instagram o Facebook</label><input type="text" id="r-redes" placeholder="Ej: @refugiopatitas"></div>
+      <div class="campo"><label>Teléfono de contacto</label><input type="text" id="r-telefono" placeholder="Ej: 11-1234-5678"></div>
+      <div class="campo">
+        <label>Contanos sobre su trabajo</label>
+        <textarea id="r-descripcion" rows="2" style="resize:none; border-radius:13px; border:2px solid rgba(44,24,16,.2); background:var(--bg); font-family:'Inter',sans-serif; font-size:14px; padding:11px 13px; width:100%; color:var(--ink);" placeholder="Hace cuánto rescatan, cuántos animales tienen..."></textarea>
+      </div>
+      <p class="nota">🔎 Verificamos manualmente a cada refugio antes de activar su cuenta — así Olfato es confiable para todos. Te avisamos cuando esté lista.</p>
+    </div>
+    <button class="btn-grande" id="btn-crear" disabled onclick="crearCuenta()">Crear mi cuenta 🐾</button>
+  </div>
+
+  <p class="nota">🦴 Nuestro algoritmo le da más visibilidad a los perros que más tiempo llevan esperando.</p>
+</div>
+
+<script>
+let rolElegido = null;
+const sesionPrevia = JSON.parse(localStorage.getItem("sesionOlfato") || "null");
+if(sesionPrevia){ irSegunRol(sesionPrevia.usuario.rol); }
+
+function irSegunRol(rol){
+  if(rol==="adoptante") location.href="/adoptar";
+  else if(rol==="refugio") location.href="/refugio";
+  else if(rol==="admin") location.href="/admin";
+}
+
+function cambiarTab(tab){
+  document.getElementById("tab-ingresar").classList.toggle("active", tab==="ingresar");
+  document.getElementById("tab-crear").classList.toggle("active", tab==="crear");
+  document.getElementById("caja-ingresar").classList.toggle("oculto", tab!=="ingresar");
+  document.getElementById("caja-crear").classList.toggle("oculto", tab!=="crear");
+  ocultarAviso();
+}
+
+function elegirRol(rol){
+  rolElegido=rol;
+  document.getElementById("rol-adoptante").classList.toggle("activo", rol==="adoptante");
+  document.getElementById("rol-refugio").classList.toggle("activo", rol==="refugio");
+  document.getElementById("campos-refugio").classList.toggle("oculto", rol!=="refugio");
+  validar();
+}
+
+["r-nombre","r-email","r-clave","r-org","r-zona","r-redes","r-telefono"].forEach(id=>
+  document.getElementById(id).addEventListener("input", validar));
+
+function validar(){
+  const base=document.getElementById("r-nombre").value.trim()
+    &&document.getElementById("r-email").value.trim()
+    &&document.getElementById("r-clave").value.trim()
+    &&rolElegido;
+  let ok=base;
+  if(rolElegido==="refugio"){
+    ok=base
+      &&document.getElementById("r-org").value.trim()
+      &&document.getElementById("r-zona").value.trim()
+      &&document.getElementById("r-redes").value.trim()
+      &&document.getElementById("r-telefono").value.trim();
+  }
+  document.getElementById("btn-crear").disabled=!ok;
+}
+
+function mostrarAviso(texto, tipo){
+  const av=document.getElementById("aviso");
+  av.textContent=texto; av.className="aviso "+(tipo||"");
+}
+function ocultarAviso(){ document.getElementById("aviso").className="aviso oculto"; }
+
+async function crearCuenta(){
+  const cuerpo={
+    nombre:document.getElementById("r-nombre").value.trim(),
+    email:document.getElementById("r-email").value.trim(),
+    clave:document.getElementById("r-clave").value,
+    rol:rolElegido,
+  };
+  if(rolElegido==="refugio"){
+    cuerpo.datos_refugio={
+      organizacion:document.getElementById("r-org").value.trim(),
+      zona:document.getElementById("r-zona").value.trim(),
+      redes:document.getElementById("r-redes").value.trim(),
+      telefono:document.getElementById("r-telefono").value.trim(),
+      descripcion:document.getElementById("r-descripcion").value.trim(),
+    };
+  }
+  const resp=await fetch("/api/registro",{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(cuerpo),
+  });
+  const datos=await resp.json();
+  if(datos.error){mostrarAviso("⚠️ "+datos.error,"error");return;}
+  if(datos.estado==="pendiente"){
+    cambiarTab("ingresar");
+    mostrarAviso("✅ ¡Cuenta creada! Antes de activarla, verificamos manualmente a cada refugio: revisamos sus redes y su trabajo para asegurarnos de que detrás haya rescatistas reales. Así Olfato es confiable para los animales y para quienes adoptan. Te avisamos apenas tu cuenta esté lista 🐾","exito");
+  }else{
+    localStorage.setItem("sesionOlfato", JSON.stringify({token:datos.token, usuario:datos.usuario}));
+    irSegunRol(datos.usuario.rol);
+  }
+}
+
+async function ingresar(){
+  const resp=await fetch("/api/login",{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:document.getElementById("l-email").value.trim(),
+      clave:document.getElementById("l-clave").value,
+    }),
+  });
+  const datos=await resp.json();
+  if(datos.error){
+    mostrarAviso(datos.mensaje?"⏳ "+datos.mensaje:"⚠️ "+datos.error, datos.error==="pendiente"?"exito":"error");
+    return;
+  }
+  localStorage.setItem("sesionOlfato", JSON.stringify({token:datos.token, usuario:datos.usuario}));
+  irSegunRol(datos.usuario.rol);
+}
+</script>
+</body>
+</html>
