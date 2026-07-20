@@ -490,7 +490,7 @@ if __name__ == "__main__":
     print("  Para frenarlo: Ctrl + C")
     print("=" * 52)
     try:
-        servidor = HTTPServer(("localhost", PUERTO), ServidorOlfato)
+        servidor = HTTPServer(("0.0.0.0", PUERTO), ServidorOlfato)
         servidor.serve_forever()
     except KeyboardInterrupt:
         print("\n🐾 Servidor frenado. ¡Hasta luego!")
